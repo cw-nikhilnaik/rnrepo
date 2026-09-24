@@ -320,6 +320,7 @@ class PrebuildsPlugin : Plugin<Project> {
     ) {
         supportedPackages.forEach { packageItem ->
             val libraryProject = project.rootProject.findProject(":${packageItem.name}") ?: return@forEach
+            var announced = false
             libraryProject.tasks
                 .matching { task ->
                     task.name.startsWith("configureCMake") ||
@@ -328,10 +329,14 @@ class PrebuildsPlugin : Plugin<Project> {
                         task.name.startsWith("prefab")
                 }.configureEach { task ->
                     task.enabled = false
-                    logger.info(
-                        "Disabled ${task.path}: ${packageItem.npmName} is substituted with a prebuilt AAR " +
-                            "that already supplies prefab, so its source native build is unused.",
-                    )
+                    logger.info("Disabled ${task.path}: it is superseded by ${packageItem.npmName}'s prebuilt AAR.")
+                    if (!announced) {
+                        announced = true
+                        logger.lifecycle(
+                            "📦 ${packageItem.npmName} is substituted with a prebuilt AAR that already supplies " +
+                                "prefab, disabling its source native build tasks",
+                        )
+                    }
                 }
         }
     }
